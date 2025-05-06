@@ -29,7 +29,6 @@ app = Quart(__name__)
 application = Application.builder().token(BOT_TOKEN).build()
 logging.basicConfig(level=logging.INFO)
 
-
 # === DeepSeek вызов ===
 async def call_deepseek_stream(prompt: str) -> str:
     try:
@@ -48,31 +47,27 @@ async def call_deepseek_stream(prompt: str) -> str:
         logging.error(f"DeepSeek API error: {e}")
         return "Не удалось получить ответ от DeepSeek."
 
-
 # === ХЕНДЛЕРЫ ===
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text(
-        "👋 *Привет!*\n\n"
-        "Я — Telegram-бот, подключённый к *DeepSeek AI* 🤖\n\n"
-        "Просто напиши мне любой вопрос или текст, и я постараюсь ответить максимально понятно и полезно!\n\n"
-        "🧠 *Возможности:*\n"
-        "• Генерация идей\n"
-        "• Ответы на вопросы\n"
-        "• Объяснение тем\n"
-        "• И многое другое!\n\n"
-        "💬 Напиши что-нибудь, чтобы начать!"
+    welcome = (
+        "*👋 Привет!*\n\n"
+        "Я — 🤖 *AI бот на базе DeepSeek*.\n\n"
+        "*Мой создатель:* [@jumpscare1]\n\n"
+        "*📌 Что я умею:*\n"
+        "• Отвечать на любые вопросы\n"
+        "• Объяснять сложные темы\n"
+        "• Помогать с кодом и не только\n\n"
+        "_Просто напиши сообщение, и я отвечу!_ ✨"
     )
-
+    await update.message.reply_text(welcome, parse_mode="MarkdownV2")
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_message = update.message.text
     reply = await call_deepseek_stream(user_message)
     await update.message.reply_text(reply)
 
-
 application.add_handler(CommandHandler("start", start))
 application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
-
 
 # === ВЕБХУК ===
 @app.post(f"/webhook/{BOT_TOKEN}")
@@ -84,7 +79,6 @@ async def webhook():
     except Exception as e:
         logging.error(f"Exception in webhook: {e}")
     return "", 200
-
 
 # === MAIN ===
 async def main():
