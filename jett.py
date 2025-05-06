@@ -1,5 +1,4 @@
 import os
-import json
 import logging
 import asyncio
 from quart import Quart, request
@@ -15,7 +14,7 @@ from openai import OpenAI
 
 # === НАСТРОЙКИ ===
 BOT_TOKEN = "7299798795:AAENrfSLJwygoVbVIh0pFWDKfwZ-RFuaEhI"
-DEEPSEEK_API_KEY = "sk-e975193325004dde8ebc9a588258724f"  # ← подставь свой реальный ключ сюда
+DEEPSEEK_API_KEY = "sk-e975193325004dde8ebc9a588258724f"
 WEBHOOK_URL = f"https://timon-sgzp.onrender.com/webhook/{BOT_TOKEN}"
 
 # === OpenAI SDK с DeepSeek API ===
@@ -28,6 +27,13 @@ client = OpenAI(
 app = Quart(__name__)
 application = Application.builder().token(BOT_TOKEN).build()
 logging.basicConfig(level=logging.INFO)
+
+# === ЭКРАНИРОВАНИЕ MarkdownV2 ===
+def escape_markdown(text: str) -> str:
+    escape_chars = r"_*[]()~`>#+-=|{}.!"
+    for char in escape_chars:
+        text = text.replace(char, f"\\{char}")
+    return text
 
 # === DeepSeek вызов ===
 async def call_deepseek_stream(prompt: str) -> str:
@@ -45,32 +51,33 @@ async def call_deepseek_stream(prompt: str) -> str:
         return response.choices[0].message.content
     except Exception as e:
         logging.error(f"DeepSeek API error: {e}")
-        return "Не удалось получить ответ от DeepSeek."
+        return "❌ Не удалось получить ответ от DeepSeek."
 
 # === ХЕНДЛЕРЫ ===
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text(
-        "👋 *Привет!*\n\n"
-        "Я — Telegram-бот, подключённый к *DeepSeek AI* 🤖\n\n"
-        "Просто напиши мне любой вопрос или текст, и я постараюсь ответить максимально понятно и полезно!\n\n"
-        "🧠 *Возможности:*\n"
-        "• Генерация идей\n"
-        "• Ответы на вопросы\n"
-        "• Объяснение тем\n"
-        "• И многое другое!\n\n"
-        "💬 Напиши что-нибудь, чтобы начать!"
+    welcome = (
+        "*👋 Привет\\!*\n\n"
+        "Я — 🤖 *AI бот на базе DeepSeek*\\.\n\n"
+        "*Мой создатель:* [@your\\_username](https://t\\.me/your\\_username)\n\n"
+        "*📌 Что я умею:*\n"
+        "• Отвечать на любые вопросы\n"
+        "• Объяснять сложные темы\n"
+        "• Помогать с кодом и не только\n\n"
+        "_Просто напиши сообщение, и я отвечу\\!_ ✨"
     )
+    await update.message.reply_text(welcome, parse_mode="MarkdownV2")
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_message = update.message.text
-    reply = await call_deepseek_stream(user_message)
-    await update.message.reply_text(reply)
+    reply_raw = await call_deepseek_stream(user_message)
+    reply = escape_markdown(reply_raw)
+    await update.message.reply_text(reply, parse_mode="MarkdownV2")
 
 application.add_handler(CommandHandler("start", start))
 application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
 # === ВЕБХУК ===
-f"/webhook/{BOT_TOKEN}"
+@app.post(f"/webhook/{BOT_TOKEN}")
 async def webhook():
     try:
         data = await request.get_json()
