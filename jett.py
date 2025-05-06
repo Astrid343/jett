@@ -15,7 +15,7 @@ from openai import OpenAI
 # === НАСТРОЙКИ ===
 BOT_TOKEN = "7299798795:AAENrfSLJwygoVbVIh0pFWDKfwZ-RFuaEhI"
 DEEPSEEK_API_KEY = "sk-e975193325004dde8ebc9a588258724f"
-WEBHOOK_URL = f"https://jett-x1xd.onrender.com/webhook/{BOT_TOKEN}"
+WEBHOOK_URL = f"https://timon-sgzp.onrender.com/webhook/{BOT_TOKEN}"
 
 # === OpenAI SDK с DeepSeek API ===
 client = OpenAI(
@@ -58,7 +58,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     welcome = (
         "*👋 Привет\\!*\n\n"
         "Я — 🤖 *AI бот на базе DeepSeek*\\.\n\n"
-        "*Мой создатель:* [@jumpscare1]\n\n"
+        "*Мой создатель:* [@your\\_username](https://t\\.me/your\\_username)\n\n"
         "*📌 Что я умею:*\n"
         "• Отвечать на любые вопросы\n"
         "• Объяснять сложные темы\n"
